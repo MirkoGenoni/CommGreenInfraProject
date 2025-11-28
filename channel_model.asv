@@ -1,7 +1,5 @@
-%% Channel model setup
-clc, clear, close all;
-
 %% Constant system parameters
+clc, clear, close all;
 M_l = 0.5*10^-3;    %leaf mass [kg] (artemisia tridentata subsp. wyomingensis)
 A_l = 25*10^-4;     %leaf area [m^2](artemisia tridentata subsp. wyomingensis)
 P_l = 10^-8;        %permeability [m/s]
@@ -10,11 +8,11 @@ K_aw = 10;          %partition coeff. between air and water
 x_tx = 0;           %tx x-position [m]
 y_tx = 0;           %tx y-position [m]
 z_tx = 1;           %tx z-position [m]
-x_rx = 0:0.01:2;    %rx x-position [m]
+x_rx = 2;           %rx x-position [m]
 y_rx = 0;           %rx y-position [m]
-y_tx = 1;           %rx z-position [m]
+z_rx = 1;           %rx z-position [m]
 
-%% Channel model parameters
+%% Model parameters
 % Transmitter 
 tau_b = 0;           %time at which constitutive emission rate ends [s]
 tau_e = 1;           %time at which constitutive emission rate restarts [s]
@@ -23,46 +21,136 @@ I = 10*t;            %production/emission rate
 m_tx = (heaviside(t-tau_b)-heaviside(t-tau_e)).*I; %message signal 
 m_tau_e = m_tx(t == tau_e);                        %value of the signal at tau_e     
 %plot(t,m_tx)
+m_tau_e = 1.1*10^-9; %monoterpene emission of Alnus glutinosa under herbivory stress [kg]
 
 % Channel
-u_x = 1;             %wind speed x-direction [m/s]
+u_x = 25;             %wind speed x-direction [m/s]
 u_y = 0;             %wind speed y-direction [m/s]
 u_z = 0;             %wind speed z-direction [m/s]
 D = 0.1;             %diffusion coeff. [m^2/s]
-Pe = (u_x*x_rx)/D;   %Peclet number, if Pe>>1 => advection regime
+x = x_rx;
+z = z_rx;
+y = y_rx;
+Pe = (u_x*x_rx)/D;        %Peclet number, if Pe>>1 => advection regime
+k = (1/u_x)*D*x_rx;       %integral of Eddy diffusivities (D = constant)   
+h = z_tx;
 
-%% VOCs concentration
-k = (1/u_x)*D ;           %integral of Eddy diffusivities (D = constant)
-A = (m_tau_e/8)*(1/(pi*k)^(3/2)); %
-C = 0;
+gamma = (m_tau_e/8)*(1/(pi*k)^(3/2)); %constant to simplify expressions 
+lambda = exp(-(y^2)/(4*k))*(exp(-((z-h)^2)/(4*k))+exp(-((z+h)^2)/(4*k))); 
+C_air = gamma*exp((-(x-u_x.*t).^2)./4*k).*lambda; %concentration C(x,y,z) in air
 
+% Receiver
+C_L0 = 0;
+tau_diffusion = x_rx.^2/D; %time delay in diffusion regime
+tau_advection = x_rx/u_x; %time delay in advection regime
+tau = (1./tau_diffusion+1./tau_advection).^(-1); %time delay in mixed regime 
+% (however we should use just tau_advection, since the ch model is in the
+% advection limite on the x-axis... 
+tau_r = tau;
+alpha = (1000*P_l*A_l)/(K_lw*M_l);
+beta = (alpha*gamma)/1000;
+delta = exp((alpha/(K_lw*M_l*u_x^2))*(K_lw*M_l*u_x*x+1000*A_l*P_l*k));
+sigma = erf((K_lw*M_l*u_x*(u_x*tau_r-x)-2000*A_l*P_l*k)/(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x*x+2000*A_l*P_l*k)/(2*K_lw*M_l*sqrt(k)*u_x));
+C_L = exp(-alpha*tau_r)*(C_L0+beta*(lambda*delta*sqrt(pi*k)/u_x)*sigma);
+
+%% Distance analysis (fig. 5a)
+% Tx setup
+m_tau_e = 1.1*10^-9;
+x_rx = 0:0.01:2;
+
+% Ch and Rx setup
+C_L0 = 0;
+tau_diffusion = x_rx.^2/D; %time delay in diffusion regime
+tau_advection = x_rx/u_x; %time delay in advection regime
+tau = (1./tau_diffusion+1./tau_advection).^(-1);  
+tau_r = tau;
+u_x = 25;             %wind speed x-direction [m/s]
+u_y = 0;             %wind speed y-direction [m/s]
+u_z = 0;             %wind speed z-direction [m/s]
+D = 0.1;             %diffusion coeff. [m^2/s]
+x = x_rx;
+z = z_rx;
+y = y_rx;
+h = z_tx;
+k = (1/u_x)*D*x_rx;       %integral of Eddy diffusivities (D = constant)   
+
+gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
+lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
+x = 0:0.01:2;
+alpha = (1000*P_l*A_l)/(K_lw*M_l);
+beta = (alpha*gamma)/1000;
+delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
+sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
+C_L = exp(-alpha*tau_r).*(C_L0+beta.*(lambda.*delta.*sqrt(pi*k)./u_x).*sigma);
+C_Lnormalized = C_L./max(C_L);
+
+% Graph
+figure; hold on; grid on;
+plot(x,C_Lnormalized,'LineWidth', 2)
+xlabel('x\_rx');
+ylabel('Characteristic time');
+title('Distance-delay analysis (fig. 5b)');
 
 %% Distance-delay analysis (fig. 5b)
-%Setup
+% Paper setup
 x_rx = 0:0.01:2;
 u_x = 0.5;
 D = 0.1;
 Pe = u_x*max(x_rx)/D;
-%Graph
+% Graph
 tau_diffusion = x_rx.^2/D;
 tau_advection = x_rx/u_x;
 tau = (1./tau_diffusion+1./tau_advection).^(-1);
 figure; hold on; grid on;
 plot(x_rx, tau_diffusion, 'LineWidth', 2);
 plot(x_rx, tau_advection, 'LineWidth', 2);
-plot(x_rx, tau, 'LineWidth', 2);
+plot(x_rx, tau, 'LineWidth', 2); %this seems to be wrong, but I think they put the wrong graph in the paper
 xlabel('x\_rx');
-ylabel('Characteristic time');
+ylabel('Time delay');
 legend('\tau_{diffusion}', '\tau_{advection}', '\tau', 'Location', 'best');
-title('Diffusion, Advection, and Combined Characteristic Times');
+title('Distance-delay analysis (fig. 5b)');
+
+%% Distance analysis (fig. 6c)
+% Tx setup
+m_tau_e = 1.1*10^-9;
+x_rx = 0:0.01:2;
+
+% Ch and Rx setup
+C_L0 = 0;
+tau_diffusion = x_rx.^2/D; %time delay in diffusion regime
+tau_advection = x_rx/u_x; %time delay in advection regime
+tau = (1./tau_diffusion+1./tau_advection).^(-1);  
+tau_r = tau;
+u_x = 25;             %wind speed x-direction [m/s]
+u_y = 0;             %wind speed y-direction [m/s]
+u_z = 0;             %wind speed z-direction [m/s]
+D = 0.1;             %diffusion coeff. [m^2/s]
+x = x_rx;
+z = z_rx;
+y = y_rx;
+h = z_tx;
+k = (1/u_x)*D*x_rx;       %integral of Eddy diffusivities (D = constant)   
+
+gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
+lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
+x = 0:0.01:2;
+alpha = (1000*P_l*A_l)/(K_lw*M_l);
+beta = (alpha*gamma)/1000;
+delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
+sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
+C_L = exp(-alpha*tau_r).*(C_L0+beta.*(lambda.*delta.*sqrt(pi*k)./u_x).*sigma);
+C_Lnormalized = C_L./max(C_L);
+
+% Graph
+plot(x,C_Lnormalized,'LineWidth', 2)
 
 %% Wind speed-delay analysis (fig. 6b)
-%Setup
+% Paper setup
 x_rx = 10;
-u_x = logspace(-4, 2, 20*6); 
+u_x = logspace(-4,2,20*6); 
 D = 0.1;
 Pe = u_x*x_rx/D;
-%Graph
+% Graph
 tau_diffusion = x_rx.^2/D*ones(size(u_x));
 tau_advection = x_rx./u_x;
 tau = (1./tau_diffusion+1./tau_advection).^(-1);
@@ -76,7 +164,7 @@ plot(u_x(idx_diff), tau_diffusion(idx_diff), 'LineWidth', 2);
 plot(u_x(idx_tau),  tau(idx_tau),          'LineWidth', 2);
 plot(u_x(idx_adv),  tau_advection(idx_adv),'LineWidth', 2);
 set(gca, 'XScale', 'log');
-xlabel('u_x (wind speed)');
-ylabel('Characteristic time');
+xlabel('u_x (wind speed) [m/s]');
+ylabel('Time delay');
 legend('\tau_{diffusion}', '\tau', '\tau_{advection}', 'Location', 'best');
 title('Wind speed-delay analysis (fig. 6b)');
