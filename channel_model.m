@@ -13,7 +13,7 @@ y_rx = 0;           %rx y-position [m]
 z_rx = 1;           %rx z-position [m]
 
 %% Model parameters
-% Transmitter 
+% Transmitter (not used)
 tau_b = 0;           %time at which constitutive emission rate ends [s]
 tau_e = 1;           %time at which constitutive emission rate restarts [s]
 t = -2:0.001:2;      %time axis [s]
@@ -55,7 +55,7 @@ C_L = exp(-alpha*tau_r)*(C_L0+beta*(lambda*delta*sqrt(pi*k)/u_x)*sigma);
 
 %% Distance analysis (fig. 5a)
 % Tx setup
-m_tau_e = 3.3*10^-9;
+m_tau_e = 1.1*10^-9;
 x_rx = 0:0.01:2;
 
 % Ch and Rx setup
