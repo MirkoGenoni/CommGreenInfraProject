@@ -78,17 +78,17 @@ gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions
 lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
 alpha = (1000*P_l*A_l)/(K_lw*M_l);
 beta = (alpha*gamma*K_lw)/(1000*K_aw);
-delta = exp(alpha/(K_lw*M_l*u_x^2).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
+delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
 sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-C_L = exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma);
+C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
 C_L_normalized = C_L./max(C_L);
 
 % Graph
 figure; hold on; grid on;
-plot(x,C_L,'LineWidth', 2)
+plot(x,C_L_normalized,'LineWidth', 2)
 xlabel('x\_rx');
 ylabel('Normalized concentration');
-title('Distance-delay analysis (fig. 5a)');
+title('Distance analysis (fig. 5a)');
 
 %% Distance-delay analysis (fig. 5b)
 % Paper setup
@@ -109,7 +109,7 @@ ylabel('Time delay [s]');
 legend('\tau_{diffusion}', '\tau_{advection}', '\tau', 'Location', 'best');
 title('Distance-delay analysis (fig. 5b)');
 
-%% Distance-delay analysis (fig. 5c)
+%% Distance-Mass analysis (fig. 5c)
 % Tx setup
 figure; hold on; grid on;
 for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
@@ -137,13 +137,16 @@ for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
     beta = (alpha*gamma*K_lw)/(1000*K_aw);
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-    C_L = exp(-alpha*tau_r).*(C_L0+beta.*(lambda.*delta.*sqrt(pi*k)./u_x).*sigma)*0.9;
+    C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
     C_Lnormalized = C_L./max(C_L);
 
     % Graph 
     plot(x,C_L,'LineWidth', 2)
 end
-
+xlabel('Distance [m]');
+ylabel('Concentration');
+legend('m\_tau\_e = 1.1e9', 'm\_tau\_e = 3.3e9', 'm\_tau\_e = 5.5e9','m\_tau\_e = 1.1e8', 'Location', 'best');
+title('Distance-Mass analysis (fig. 5c)');
 
 %% Wind speed analysis (fig. 6a)
 % Tx setup
@@ -171,13 +174,16 @@ for u_x = [1 25 50 100]
     beta = (alpha*gamma*K_lw)/(1000*K_aw);
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-    C_L = exp(-alpha*tau_r).*(C_L0+beta.*(lambda.*delta.*sqrt(pi*k)./u_x).*sigma)*0.9;
+    C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
     C_L_normalized = C_L./max(C_L);
 
     % Graph 
     plot(x,C_L_normalized,'LineWidth', 2)
 end
-
+ylabel('Normalized concentration');
+xlabel('Distance [m]');
+legend('u\_x = 1', 'u\_x = 25', 'u\_x = 50','u\_x = 100', 'Location', 'best');
+title('Wind speed analysis (fig. 6a)');
 
 %% Wind speed-delay analysis (fig. 6b)
 % Paper setup
@@ -230,9 +236,14 @@ for D = [0.1 10 35 100]
     beta = (alpha*gamma*K_lw)/(1000*K_aw);
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-    C_L = exp(-alpha*tau_r).*(C_L0+beta.*(lambda.*delta.*sqrt(pi*k)./u_x).*sigma)*0.9;%0.9
+    C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
     C_L_normalized = C_L./max(C_L);
 
     % Graph 
     plot(x,C_L_normalized,'LineWidth', 2)
+    
 end
+    ylabel('Normalized concentration');
+    xlabel('Distance [m]');
+    legend('D = 0.1', 'D = 10', 'D = 35','D = 100', 'Location', 'best');
+    title('Eddy diffusivity analysis (fig. 6c)');
