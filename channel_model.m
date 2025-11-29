@@ -12,7 +12,7 @@ x_rx = 0.001;       %rx x-position [m]
 y_rx = 0;           %rx y-position [m]
 z_rx = 1;           %rx z-position [m]
 
-%% Model parameters
+%% Model parameters (just a reference to build each section/figure)
 % Transmitter (not used)
 tau_b = 0;           %time at which constitutive emission rate ends [s]
 tau_e = 1;           %time at which constitutive emission rate restarts [s]
@@ -46,7 +46,7 @@ tau_advection = x_rx/u_x; %time delay in advection regime
 tau = (1./tau_diffusion+1./tau_advection).^(-1); %time delay in mixed regime 
 % (however we should use just tau_advection, since the ch model is in the
 % advection limite on the x-axis... 
-tau_r = tau;
+tau_r = max(tau);
 alpha = (1000*P_l*A_l)/(K_lw*M_l);
 beta = (alpha*gamma*K_lw)/(1000*K_aw);
 delta = exp((alpha/(K_lw*M_l*u_x^2))*(K_lw*M_l*u_x*x+1000*A_l*P_l*k));
@@ -81,7 +81,12 @@ beta = (alpha*gamma*K_lw)/(1000*K_aw);
 delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
 sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
 C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
-C_L_normalized = C_L./max(C_L);
+
+mu_noise = -0.1*C_L;          
+sigma_noise = abs(mu_noise)/3;
+noise = mu_noise+sigma_noise.*randn(size(C_L));
+C_L_noise = C_L+noise;
+C_L_normalized = C_L_noise./max(C_L_noise);
 
 % Graph
 figure; hold on; grid on;
@@ -138,10 +143,15 @@ for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
     C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
-    C_Lnormalized = C_L./max(C_L);
+
+    mu_noise = -0.1*C_L;          
+    sigma_noise = abs(mu_noise)/3;
+    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    C_L_noise = C_L+noise;
+    C_L_normalized = C_L./max(C_L);
 
     % Graph 
-    plot(x,C_L,'LineWidth', 2)
+    plot(x,C_L_noise,'LineWidth', 2)
 end
 xlabel('Distance [m]');
 ylabel('Concentration');
@@ -175,7 +185,12 @@ for u_x = [1 25 50 100]
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
     C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
-    C_L_normalized = C_L./max(C_L);
+
+    mu_noise = -0.1*C_L;          
+    sigma_noise = abs(mu_noise)/3;
+    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    C_L_noise = C_L+noise;
+    C_L_normalized = C_L_noise./max(C_L_noise);
 
     % Graph 
     plot(x,C_L_normalized,'LineWidth', 2)
@@ -237,7 +252,12 @@ for D = [0.1 10 35 100]
     delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
     sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
     C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
-    C_L_normalized = C_L./max(C_L);
+
+    mu_noise = -0.1*C_L;          
+    sigma_noise = abs(mu_noise)/3;
+    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    C_L_noise = C_L+noise;
+    C_L_normalized = C_L_noise./max(C_L_noise);
 
     % Graph 
     plot(x,C_L_normalized,'LineWidth', 2)
