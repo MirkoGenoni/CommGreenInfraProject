@@ -24,7 +24,7 @@ m_tau_e = m_tx(t == tau_e);                        %value of the signal at tau_e
 m_tau_e = 1.1*10^-9; %monoterpene emission of Alnus glutinosa under herbivory stress [kg]
 
 % Channel
-u_x = 25;             %wind speed x-direction [m/s]
+u_x = 25;            %wind speed x-direction [m/s]
 u_y = 0;             %wind speed y-direction [m/s]
 u_z = 0;             %wind speed z-direction [m/s]
 D = 0.1;             %diffusion coeff. [m^2/s]
@@ -46,12 +46,12 @@ tau_advection = x_rx/u_x; %time delay in advection regime
 tau = (1./tau_diffusion+1./tau_advection).^(-1); %time delay in mixed regime 
 % (however we should use just tau_advection, since the ch model is in the
 % advection limite on the x-axis... 
-tau_r = max(tau);
+tau_r = max(tau_advection);
 alpha = (1000*P_l*A_l)/(K_lw*M_l);
 beta = (alpha*gamma*K_lw)/(1000*K_aw);
 delta = exp((alpha/(K_lw*M_l*u_x^2))*(K_lw*M_l*u_x*x+1000*A_l*P_l*k));
 sigma = erf((K_lw*M_l*u_x*(u_x*tau_r-x)-2000*A_l*P_l*k)/(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x*x+2000*A_l*P_l*k)/(2*K_lw*M_l*sqrt(k)*u_x));
-C_L = exp(-alpha*tau_r)*(C_L0+beta*(lambda*delta*sqrt(pi*k)/u_x)*sigma);
+C_L = 0.9*exp(-alpha*tau_r)*(C_L0+beta*(lambda*delta*sqrt(pi*k)/u_x)*sigma);
 
 %% Distance analysis (fig. 5a)
 % Tx setup
@@ -84,13 +84,13 @@ C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigm
 
 mu_noise = -0.1*C_L;          
 sigma_noise = abs(mu_noise)/3;
-noise = mu_noise+sigma_noise.*randn(size(C_L));
+noise = sigma_noise.*randn(size(C_L));
 C_L_noise = C_L+noise;
 C_L_normalized = C_L_noise./max(C_L_noise);
 
 % Graph
 figure; hold on; grid on;
-plot(x,C_L_normalized,'LineWidth', 2)
+plot(x,C_L_noise,'LineWidth', 2)
 xlabel('x\_rx');
 ylabel('Normalized concentration');
 title('Distance analysis (fig. 5a)');
@@ -99,12 +99,14 @@ title('Distance analysis (fig. 5a)');
 % Paper setup
 x_rx = 0:0.01:2;
 u_x = 0.5;
+u_x2 = 0.005;
 D = 0.1;
 Pe = u_x*max(x_rx)/D;
 % Graph
 tau_diffusion = x_rx.^2/D;
 tau_advection = x_rx/u_x;
-tau = (1./tau_diffusion+1./tau_advection).^(-1);
+tau_advection2 = x_rx/u_x2;
+tau = (1./tau_diffusion+1./tau_advection2).^(-1);
 figure; hold on; grid on;
 plot(x_rx, tau_diffusion, 'LineWidth', 2);
 plot(x_rx, tau_advection, 'LineWidth', 2);
@@ -146,7 +148,7 @@ for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
 
     mu_noise = -0.1*C_L;          
     sigma_noise = abs(mu_noise)/3;
-    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    noise =sigma_noise.*randn(size(C_L));
     C_L_noise = C_L+noise;
     C_L_normalized = C_L./max(C_L);
 
@@ -188,7 +190,7 @@ for u_x = [1 25 50 100]
 
     mu_noise = -0.1*C_L;          
     sigma_noise = abs(mu_noise)/3;
-    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    noise = sigma_noise.*randn(size(C_L));
     C_L_noise = C_L+noise;
     C_L_normalized = C_L_noise./max(C_L_noise);
 
@@ -230,7 +232,7 @@ title('Wind speed-delay analysis (fig. 6b)');
 figure; hold on; grid on;
 for D = [0.1 10 35 100]
     u_x = 25;
-    x_rx = 0:0.01:1.5;
+    x_rx = 0.1:0.01:1.5;
     m_tau_e = 1.1*10^-9;
     % Ch and Rx setup
     C_L0 = 0;
@@ -255,7 +257,7 @@ for D = [0.1 10 35 100]
 
     mu_noise = -0.1*C_L;          
     sigma_noise = abs(mu_noise)/3;
-    noise = mu_noise+sigma_noise.*randn(size(C_L));
+    noise = sigma_noise.*randn(size(C_L));
     C_L_noise = C_L+noise;
     C_L_normalized = C_L_noise./max(C_L_noise);
 
