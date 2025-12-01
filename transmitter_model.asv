@@ -114,12 +114,10 @@ grid on;
 
 %--------------------------------------------------------------------------
 
-% OBTAIN STRESSOR FROM THEIR DATA
-
+%
 file = fopen("Data/Transmitter/LOX_emission_LS.csv", "r");
 sanizited_data = fopen("Data/Transmitter/sanitized_LOX_emission_LS.csv", ...
     "w");
-
 while ~feof(file)
     line = fgetl(file);
     new_line = strrep(line, ',','.');
@@ -141,10 +139,12 @@ w = 10.02;
 c = 23.83;
 k_d = 8.52;
 
-curr_s = (c-log(((max./(I_actual+k_d.*data_emission_LS.Curve1(1:end-1))))-1))./w;
+curr_I = I_actual(1);
+curr_g = data_emission_LS.Curve1(1);
 
-% OBTAIN MEASURE FROM THEIR PARAMETERS
+curr_s = (c-log(((max./(I_actual+k_d.*data_emission_LS.Curve1(1:end-1))))-1))./w
 
+%
 s = 2.5;
 max = 0.05;
 w = 10.02;
@@ -156,6 +156,7 @@ I_est = (max./ ...
     -k_d.*larvae_2(1:end-1);
 estimated = zeros(1, length(I_est));
 
+estimate(2:end-1) = 
 for index = 1:length(x)
     if index == 1
         estimated(index) = larvae_2(1);
