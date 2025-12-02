@@ -114,10 +114,12 @@ grid on;
 
 %--------------------------------------------------------------------------
 
-%
+% OBTAIN STRESSOR FROM THEIR DATA
+
 file = fopen("Data/Transmitter/LOX_emission_LS.csv", "r");
 sanizited_data = fopen("Data/Transmitter/sanitized_LOX_emission_LS.csv", ...
     "w");
+
 while ~feof(file)
     line = fgetl(file);
     new_line = strrep(line, ',','.');
@@ -139,12 +141,10 @@ w = 10.02;
 c = 23.83;
 k_d = 8.52;
 
-curr_I = I_actual(1);
-curr_g = data_emission_LS.Curve1(1);
+curr_s = (c-log(((max./(I_actual+k_d.*data_emission_LS.Curve1(1:end-1))))-1))./w;
 
-curr_s = (c-log(((max./(I_actual+k_d.*data_emission_LS.Curve1(1:end-1))))-1))./w
+% OBTAIN MEASURE FROM THEIR PARAMETERS
 
-%
 s = 2.5;
 max = 0.05;
 w = 10.02;
@@ -156,7 +156,6 @@ I_est = (max./ ...
     -k_d.*larvae_2(1:end-1);
 estimated = zeros(1, length(I_est));
 
-estimate(2:end-1) = 
 for index = 1:length(x)
     if index == 1
         estimated(index) = larvae_2(1);
@@ -170,3 +169,73 @@ scatter(x, larvae_2);
 hold on;
 plot(x, estimated);
 grid on;
+%% PLOT POINTS
+close all;
+file = fopen("Data/Transmitter/emission.csv", "r");
+sanizited_data = fopen("Data/Transmitter/sanitized_emission_data.csv", ...
+    "w");
+while ~feof(file)
+    line = fgetl(file);
+    new_line = strrep(line, ',','.');
+    new_line = strrep(new_line, ';',',');
+    new_line = strcat(new_line,'\n');
+    fprintf(sanizited_data, new_line);
+    disp(new_line);
+end
+fclose(file);
+fclose(sanizited_data);
+
+data_emission = readtable("Data/Transmitter/sanitized_emission_data.csv", ...
+    'PreserveVariableNames',true);
+figure;
+scatter(data_emission.x, data_emission.larvae_2);
+xlabel("Days"); ylabel("LOX emission rate [nmol m^{-2} s^{-1}]", ...
+    'Interpreter', 'tex');
+figure;
+scatter(data_emission.x, data_emission.larvae_4);
+xlabel("Days"); ylabel("LOX emission rate [nmol m^{-2} s^{-1}]", ...
+    'Interpreter', 'tex');
+figure;
+scatter(data_emission.x, data_emission.larvae_8);
+xlabel("Days"); ylabel("LOX emission rate [nmol m^{-2} s^{-1}]", ...
+    'Interpreter', 'tex');
+
+%% PLOT AREA LEAF EATEN
+
+file = fopen("Data/Transmitter/LOX_to_leaf.csv", "r");
+sanizited_data = ...
+    fopen("Data/Transmitter/sanitized_LOX_to_leaf_values.csv", "w");
+while ~feof(file)
+    line = fgetl(file);
+    new_line = strrep(line, ',','.');
+    new_line = strrep(new_line, ';',',');
+    new_line = strcat(new_line,'\n');
+    fprintf(sanizited_data, new_line);
+    disp(new_line);
+end
+fclose(file);
+fclose(sanizited_data);
+
+
+data_stressor = ...
+    readtable("Data/Transmitter/sanitized_LOX_to_leaf_values.csv", ...
+    'PreserveVariableNames',true);
+
+graph = @(param, x) param(1)exp(param(2)*x);
+
+initial_guess = [1e-1,1e-1];
+param_fit = lsqcurvefit(graph, initial_guess, data_stressor.x, ...
+    data_stressor.Curve1);
+
+a = param_fit(1);
+b = param_fit(2);
+
+x= 0:0.01:30;
+y=a*exp(b*x);
+
+figure;
+scatter(data_stressor.x, data_stressor.Curve1);
+hold on;
+plot(x, y);
+xlabel("Leaf area eaten [cm^2]", 'Interpreter', 'tex');
+ylabel("LOX emission [nmol m^{-2} s^{-1}]");
