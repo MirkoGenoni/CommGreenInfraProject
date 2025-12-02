@@ -90,7 +90,7 @@ C_L_normalized = C_L_noise./max(C_L_noise);
 
 % Graph
 figure; hold on; grid on;
-plot(x,C_L_noise,'LineWidth', 2)
+plot(x,C_L_normalized,'LineWidth', 2)
 xlabel('x\_rx');
 ylabel('Normalized concentration');
 title('Distance analysis (fig. 5a)');
@@ -164,7 +164,7 @@ title('Distance-Mass analysis (fig. 5c)');
 % Tx setup
 figure; hold on; grid on;
 for u_x = [1 25 50 100]
-    x_rx = 0:0.01:5.5;
+    x_rx = 0.1:0.01:5.5;
     m_tau_e = 1.1*10^-9;
     % Ch and Rx setup
     C_L0 = 0;

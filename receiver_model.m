@@ -444,56 +444,55 @@ legend('Normalized CL', '0.5*maxC', '0.125*maxC','0.05*maxC','0. 025*maxC', 'Loc
 title('Receiver threashold analysis (fig. 6f)');
 
 %% Wind direction analysis (fig. 6d)
-% Tx setup
-C_L_noise = zeros(6,61);
-xx = 1;
-yy = 1;
-x_ax = (0:1:60);
-figure; hold on; grid on;
-for recDist = [0.5 0.8 1.1 1.4 1.7 2.0]
-    for winDir = 1:61
-        u_x = 25*cos(x_ax(winDir)*(pi/180));
-        x_rx = recDist;
-        m_tau_e = 1.1*10^-9;
-        D = 0.1;
-        % Ch and Rx setup
-        C_L0 = 0;
-        u_y = 25*sin(x_ax(winDir)*(pi/180));             %wind speed y-direction [m/s]
-        u_z = 0;             %wind speed z-direction [m/s]
-        x = x_rx;
-        z = z_rx;
-        y = y_rx;
-        h = z_tx;
-        k = (1./u_x)*D.*x_rx;       %integral of Eddy diffusivities (D = constant)  
-        tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
-        tau_advection = x_rx./u_x; %time delay in advection regime
-        tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-        tau_r = max(tau_advection);
-        gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
-        lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
+x_distances = [0.5 0.8 1.1 1.4 1.7 2.0];   % m
+theta_deg = linspace(0,60,100);
+theta_rad = deg2rad(theta_deg);
+
+figure(); hold on;
+
+for i = 1:length(x_distances)
+    x_r_fixed = x_distances(i);
+    tau_r = x_r_fixed / u_x;
+
+    CL = zeros(size(theta_rad));
+
+    for j = 1:length(theta_rad)
+        theta = theta_rad(j);
+
+        % 
+        x_dash =  x_r_fixed * cos(theta);
+        y_dash = -x_r_fixed * sin(theta);
+
+        k = D * x_dash / u_x;
+
         alpha = (1000*P_l*A_l)/(K_lw*M_l);
-        beta = (alpha*gamma*K_lw)/(1000*K_aw);
-        delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
-        sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-        C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))./u_x).*sigma); %0.9
-    
-        % mu_noise = -0.1*C_L;          
-        % sigma_noise = abs(mu_noise)/3;
-        % noise = 0;
-        % MontCal = 3000;
-        % for ml = 1:MontCal
-        %     noise = noise + (mu_noise + sigma_noise.*randn(size(C_L))) ;
-        % end
-        % noise = noise/MontCal;
-        C_L_noise(xx,yy) = C_L;
-        yy = yy + 1;
+        beta = (P_l * A_l * m_tau_e) / (K_aw * M_l * 8 * (pi * k)^(3/2));
+        lambda = exp(-((z-h)^2 + y_dash^2) / (4*k)) + ...
+                 exp(-((z+h)^2 + y_dash^2) / (4*k));
+        Delta = exp((1000 * A_l * P_l * (K_lw * M_l * u_x * x_dash + 1000 * A_l * P_l * k)) / ...
+               (K_lw^2 * M_l^2 * u_x^2));
+
+        f1 = ((K_lw * M_l * u_x * (u_x * tau_r - x_dash)) - 2000 * A_l * P_l * k) / ...
+             (2 * K_lw * M_l * sqrt(k) * u_x);
+        f2 = (K_lw * M_l * u_x * x_dash + 2000 * A_l * P_l * k) / ...
+             (2 * K_lw * M_l * sqrt(k) * u_x);
+
+        % Full propagation equation
+        CL(j) = exp(-alpha * tau_r) * ...
+                ( C_L0 + beta * lambda * Delta * sqrt(pi * k) / u_x * ...
+                 (erf(f1) + erf(f2)) );
     end
-    yy = 1;
-    % Graph 
-    plot(x_ax,C_L_noise(xx,:),'LineWidth', 2)
-    xx = xx + 1;
+
+    % Not considring the noise here
+    CLN = CL;
+
+    semilogy(theta_deg, CLN, 'LineWidth',2, 'DisplayName', sprintf('Distance = %.2f m', x_r_fixed));
 end
-    ylabel('Normalized concentration');
-    xlabel('Distance [m]');
-    %legend('nInt = 0', 'nInt = 0.1', 'nInt = 0.3','nInt = 0.5','nInt = 0.7', 'Location', 'best');
-    title('Noise intensity analysis (fig. 6d)');
+
+grid on; box on;
+xlabel('Degrees of Deviation');
+ylabel('C_{L_N} (mol/m^3)');
+title('Fig. 7: Wind Direction Analysis');
+legend('Location','best');
+ylim([1e-100 1]);
+set(gca, 'YScale','log', 'LineWidth', 1.2);
