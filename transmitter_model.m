@@ -37,6 +37,9 @@ figure;
 scatter(data_stressor.x, data_stressor.Curve1);
 hold on;
 plot(x, y);
+xlabel("Leaf area eaten [cm^2]", 'Interpreter', 'tex');
+ylabel("LOX emission [nmol m^{-2} s^{-1}]");
+fontsize(16,"points");
 
 % -------------------------------------------------------------------------
 
@@ -118,7 +121,7 @@ fontsize(16,"points");
 
 %--------------------------------------------------------------------------
 
-% OBTAIN STRESSOR FROM THEIR DATA
+%% OBTAIN STRESSOR FROM THEIR DATA
 
 file = fopen("Data/Transmitter/LOX_emission_LS.csv", "r");
 sanizited_data = fopen("Data/Transmitter/sanitized_LOX_emission_LS.csv", ...
