@@ -332,11 +332,11 @@ data_emission = readtable("Data/Transmitter/sanitized_emission_data.csv", ...
 sampling_T = 1;
 interpolated_data = zeros(1,(1/sampling_T)*(length(data_emission.x)-1));
 for j=2:length(data_emission.x)
-    new_x(1,(j-2)*(1/sampling_T)+1:(j-1)*(1/sampling_T)) = ...
-        linspace(data_emission.x(j-1),data_emission.x(j),1/sampling_T);
-    interpolated_data(1,(j-2)*(1/sampling_T)+1:(j-1)*(1/sampling_T))= ...
+    new_x(1,(j-2)*(1/sampling_T)+1:(j-1)*(1/sampling_T)+1) = ...
+        linspace(data_emission.x(j-1),data_emission.x(j),(1/sampling_T)+1);
+    interpolated_data(1,(j-2)*(1/sampling_T)+1:(j-1)*(1/sampling_T)+1)= ...
         linspace(data_emission.larvae_2(j-1),data_emission.larvae_2(j), ...
-        (1/sampling_T));
+        (1/sampling_T)+1);
 end
 
 % FITTING
@@ -371,14 +371,12 @@ for index = 1:length(interpolated_data)
 end
 
 original_var = sum((data_emission.larvae_2-mean(data_emission.larvae_2)).^2);
+error = sum((estimated-interpolated_data).^2);
+r_2 = 1-(error/original_var);
 
-r_2 = 1-(resnorm/original_var);
-
-interpolated_data = [data_emission.larvae_2(1), interpolated_data];
-estimated = [data_emission.larvae_2(1), estimated];
 figure;
-plot(data_emission.x,interpolated_data);
+plot(new_x,interpolated_data);
 hold on;
 scatter(data_emission.x, data_emission.larvae_2);
-plot(data_emission.x,estimated);
+plot(new_x,estimated);
 hold off;
