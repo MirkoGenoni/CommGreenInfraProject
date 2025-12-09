@@ -92,7 +92,7 @@ larvae_2 = data_emission.larvae_2';
 leaf_cons = zeros(1,length(interpolated_data));
 for index1= 1:length(interpolated_data)
     temp = find(round(y,4)==round(interpolated_data(index1),4));
-    leaf_cons(1,index1) = (round((max(temp) + min(temp))/2)-1)*1e-4;
+    leaf_cons(1,index1) = (round((max(temp) + min(temp))/2)-1)*0.01*1e-4;
 end
 
 % LOSS FUNCTION BETWEEN OUR EQUATION AND THE EXPERIMENTAL DATA
@@ -113,7 +113,6 @@ fitted = (max(interpolated_data)./ ...
     -param_fit(3)*interpolated_data;
 
 
-estimated = zeros(1, (sampling_f*length(data_emission.x))-1);
 for index = 1:length(interpolated_data)
     if index == 1
         estimated(index) = interpolated_data(1);
@@ -124,7 +123,7 @@ end
 
 original_var = sum((data_emission.larvae_2-mean(data_emission.larvae_2)).^2);
 error = sum((estimated-interpolated_data).^2);
-r_2_emission = 1-(error/original_var)
+r_2 = 1-(error/original_var);
 
 figure;
 plot(new_x,interpolated_data);
