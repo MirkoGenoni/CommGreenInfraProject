@@ -72,9 +72,9 @@ data_emission = readtable("Data/Transmitter/sanitized_emission_data.csv", ...
 % INTERPOLATION
 sampling_T = 1;
 sampling_f = 1/sampling_T;
-
-new_x = zeros(1, (sampling_f*length(data_emission.x))-1);
-interpolated_data = zeros(1,(sampling_f)*(length(data_emission.x)-1));
+interpolated_length = (sampling_f*length(data_emission.x))-1;
+new_x = zeros(1, interpolated_length);
+interpolated_data = zeros(1,interpolated_length);
 
 for j=2:length(data_emission.x)
     curr_interval = (j-2)*(sampling_f)+1:(j-1)*(sampling_f)+1;
@@ -82,24 +82,25 @@ for j=2:length(data_emission.x)
     new_x(1,curr_interval) = ...
         linspace(data_emission.x(j-1),data_emission.x(j),(sampling_f)+1);
 
-    interpolated_data(1,(j-2)*(sampling_f)+1:(j-1)*(sampling_f)+1)= ...
+    interpolated_data(1,curr_interval)= ...
         linspace(data_emission.larvae_2(j-1),data_emission.larvae_2(j), ...
         (sampling_f)+1);
 end
 
 % EXTRACT STRESSOR FROM CURRENT EMISSION
 larvae_2 = data_emission.larvae_2';
-leaf_cons = zeros(1,length(interpolated_data));
+leaf_cons = zeros(1,interpolated_length);
 for index1= 1:length(interpolated_data)
     temp = find(round(y,4)==round(interpolated_data(index1),4));
-    leaf_cons(1,index1) = (round((max(temp) + min(temp))/2)-1)*1e-4;
+    leaf_cons(1,index1) = y(round((max(temp) + min(temp))/2)-1)*1e-4;
 end
 
 % LOSS FUNCTION BETWEEN OUR EQUATION AND THE EXPERIMENTAL DATA
+delta_value = interpolated_data(2:end)-interpolated_data(1:end-1);
 equation = @(parameters) ((max(interpolated_data)./ ... 
     (1+exp(-parameters(1)*leaf_cons(1:end-1) + parameters(2)))) ...
     -parameters(3)*interpolated_data(1:end-1))- ...
-    (interpolated_data(2:end)-interpolated_data(1:end-1));
+    delta_value;
 
 % FITTING
 x0=[1e-1,1e-1,1e-1]; %initial parameters
@@ -113,7 +114,7 @@ fitted = (max(interpolated_data)./ ...
     -param_fit(3)*interpolated_data;
 
 
-estimated = zeros(1, (sampling_f*length(data_emission.x))-1);
+estimated = zeros(1, interpolated_length);
 for index = 1:length(interpolated_data)
     if index == 1
         estimated(index) = interpolated_data(1);
@@ -122,9 +123,10 @@ for index = 1:length(interpolated_data)
     end
 end
 
-original_var = sum((data_emission.larvae_2-mean(data_emission.larvae_2)).^2);
+original_var = sum((data_emission.larvae_2 - ...
+    mean(data_emission.larvae_2)).^2);
 error = sum((estimated-interpolated_data).^2);
-r_2_emission = 1-(error/original_var)
+r_2_esmission = 1-(error/original_var)
 
 figure;
 plot(new_x,interpolated_data);
