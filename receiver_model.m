@@ -72,15 +72,15 @@ k = (1/u_x)*D.*x_rx;       %integral of Eddy diffusivities (D = constant)
 tau_diffusion = x_rx.^2/D; %time delay in diffusion regime
 tau_advection = x_rx./u_x; %time delay in advection regime
 tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-tau_r = max(tau_advection);
+tau_r = tau_advection;
 
 gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
 lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
 alpha = (1000*P_l*A_l)/(K_lw*M_l);
 beta = (alpha*gamma*K_lw)/(1000*K_aw);
 delta = exp((alpha/(K_lw*M_l*u_x^2)).*(K_lw*M_l*u_x.*x+1000*A_l*P_l*k));
-sigma = erf((K_lw*M_l*u_x.*(u_x*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
-C_L = 0.9*exp(-alpha*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
+sigma = erf((K_lw*M_l*u_x.*(u_x.*tau_r-x)-2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x))+erf((K_lw*M_l*u_x.*x+2000*A_l*P_l*k)./(2*K_lw*M_l*sqrt(k)*u_x));
+C_L = 0.9*exp(-alpha.*tau_r).*(C_L0+((beta.*lambda.*delta.*sqrt(pi*k))/u_x).*sigma); %0.9
 
 mu_noise = -0.1*C_L;          
 sigma_noise = abs(mu_noise)/3;
@@ -143,7 +143,7 @@ for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
     tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
     tau_advection = x_rx./u_x; %time delay in advection regime
     tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-    tau_r = max(tau_advection);
+    tau_r = tau_advection;
     gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
     lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
     x = 0:0.01:2;
@@ -161,7 +161,7 @@ for m_tau_e = [1.1, 3.3, 5.5, 11]*10^-9
         noise = noise + (mu_noise + sigma_noise.*randn(size(C_L))) ;
     end
     noise = noise/MontCal;
-    C_L_noise = C_L+noise;
+    C_L_noise = (C_L+noise)/137;
     C_L_normalized = C_L./max(C_L);
 
     % Graph 
@@ -175,8 +175,8 @@ title('Distance-Mass analysis (fig. 5c)');
 %% Wind speed analysis (fig. 6a)
 % Tx setup
 figure; hold on; grid on;
-for u_x = [1 25 50 100]
-    x_rx = 0:0.01:5.5;
+for u_x = [0.1 0.2 0.4 0.6 0.8 1] %[1 25 50 100]
+    x_rx = 0:0.01:10.5;
     m_tau_e = 1.1*10^-9;
     % Ch and Rx setup
     C_L0 = 0;
@@ -191,7 +191,7 @@ for u_x = [1 25 50 100]
     tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
     tau_advection = x_rx./u_x; %time delay in advection regime
     tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-    tau_r = max(tau_advection);
+    tau_r = tau_advection;
     gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
     lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
     alpha = (1000*P_l*A_l)/(K_lw*M_l);
@@ -216,7 +216,7 @@ for u_x = [1 25 50 100]
 end
 ylabel('Normalized concentration');
 xlabel('Distance [m]');
-legend('u\_x = 1', 'u\_x = 25', 'u\_x = 50','u\_x = 100', 'Location', 'best');
+legend('Location','best');
 title('Wind speed analysis (fig. 6a)');
 
 %% Wind speed-delay analysis (fig. 6b)
@@ -263,7 +263,7 @@ for D = [0.1 10 35 100]
     tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
     tau_advection = x_rx./u_x; %time delay in advection regime
     tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-    tau_r = max(tau_advection);
+    tau_r = tau_advection;
     gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
     lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
     alpha = (1000*P_l*A_l)/(K_lw*M_l);
@@ -312,7 +312,7 @@ for nInt = [0 1 3 5 7]
     tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
     tau_advection = x_rx./u_x; %time delay in advection regime
     tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-    tau_r = max(tau_advection);
+    tau_r = tau_advection;
     gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
     lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
     alpha = (1000*P_l*A_l)/(K_lw*M_l);
@@ -363,7 +363,7 @@ k = (1/u_x)*D.*x_rx;       %integral of Eddy diffusivities (D = constant)
 tau_diffusion = x_rx.^2./D; %time delay in diffusion regime
 tau_advection = x_rx./u_x; %time delay in advection regime
 tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-tau_r = max(tau_advection);
+tau_r = tau_advection;
 gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
 lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
 alpha = (1000*P_l*A_l)/(K_lw*M_l);
@@ -410,7 +410,7 @@ k = (1/u_x)*D.*x_rx;       %integral of Eddy diffusivities (D = constant)
 tau_diffusion = x_rx.^2/D; %time delay in diffusion regime
 tau_advection = x_rx./u_x; %time delay in advection regime
 tau = (1./tau_diffusion+1./tau_advection).^(-1);  
-tau_r = max(tau_advection);
+tau_r = tau_advection;
 
 gamma = (m_tau_e/8).*(1./(pi.*k).^(3/2)); %constant to simplify expressions 
 lambda = exp(-(y^2)./(4*k)).*(exp(-((z-h)^2)./(4*k))+exp(-((z+h)^2)./(4*k))); 
