@@ -88,7 +88,6 @@ polynomial_grade = 3:12;
 r_2_leaf_area = zeros(1, length(polynomial_grade));
 original_var = sum((leaf_cons - ... 
     mean(leaf_cons)).^2);
-
 for k=1:length(polynomial_grade)
     p = polyfit(t_em_intrp, leaf_cons, polynomial_grade(k));
     leaf_fit = polyval(p, t_em_intrp);
@@ -96,6 +95,12 @@ for k=1:length(polynomial_grade)
     resnorm_sq = sum(residuals.^2);
     r_2_leaf_area(k) = 1-(resnorm_sq/original_var);
 end
+
+figure;
+plot(polynomial_grade,r_2_leaf_area);
+xlabel("Polynomial grade");
+ylabel("r^2", 'Interpreter', 'tex');
+fontsize(16,"points");
 
 %PLOT STRESSOR PROFILE
 figure;
@@ -106,38 +111,43 @@ xlabel("Days");
 ylabel("Leaf area eaten [cm^2]", 'Interpreter', 'tex');
 fontsize(16,"points");
 
-%PLOT r^2 VALUE
-figure;
-plot(polynomial_grade,r_2_leaf_area);
-xlabel("Polynomial grade");
-ylabel("r^2", 'Interpreter', 'tex');
-fontsize(16,"points");
-
 figure;
 plot(t_em_intrp,emission_intrp);
 hold on;
 scatter(t,emission);
 
 % LEAST SQUARE ON DIFFERENTIAL EQUATION
-starting_positions= 10.^(-6:-1); %Order of magnitude
-%starting_positions=linspace(10^-6,10^-1,1000);
-[best_param, error_profile] = ODE_fit(starting_positions,p, ...
-    t_em_intrp,emission_intrp);
+options = optimoptions(@lsqnonlin, ...
+    'Algorithm','levenberg-marquardt');
+starting_positions= 10.^(-6:3);
+resnorm_fitting_diff = zeros(1,length(starting_positions));
+best = 1;
+prev_resnorm = 1000;
+for l=1:length(starting_positions)
+    x0=[starting_positions(l),starting_positions(l),starting_positions(l)];
+    [param_fit,resnorm,residual,eflag,output] = lsqnonlin( ...
+        @(params) ODE_fit(params(1),params(2),params(3), ...
+        t_em_intrp,leaf_fit,t_em_intrp,emission_intrp), ...
+        x0, [],[],options);
+    resnorm_fitting_diff(l) = resnorm;
+    if(prev_resnorm>resnorm)
+        best=l;
+    end
+    prev_resnorm = re
+end
 
 % SOLVE DIFFERENTIAL EQUATION WITH OPTIMAL PARAMETERS
 tsolv=[0 5];
 ic = emission_intrp(1);
-[t,sol] = ode45(@(t,g) ODE_eq(t,g,best_param(1),best_param(2), ...
-    best_param(3), p),tsolv,ic);
+[t,sol] = ode45(@(t,g) ODE_eq(t,g,param_fit(1),param_fit(2), ...
+    param_fit(3), t_em_intrp, leaf_cons),tsolv,ic);
 sol_intrp = interp1(t,sol,t_em_intrp);
-plot(t,sol);
+plot(t_em_intrp,sol_intrp);
 xlabel("Days");
 ylabel("LOX emission [nmol m^{-2} s^{-1}]", 'Interpreter', 'tex');
 fontsize(16,"points");
 legend('Emission interpolation', 'Experimental points', ...
     'Emission fitted to differential eq.');
 
-
-
 figure;
-plot(starting_positions,error_profile);
+plot(starting_positions,resnorm_fitting_diff);
