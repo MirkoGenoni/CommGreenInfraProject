@@ -129,7 +129,8 @@ tsolv=[0 5];
 ic = emission_intrp(1);
 [t,sol] = ode45(@(t,g) ODE_eq(t,g,best_param(1),best_param(2), ...
     best_param(3), p),tsolv,ic);
-sol_intrp = interp1(t,sol,t_em_intrp);
+
+% PLOT FITTED SOLUTION TO DIFFERENTIAL EQUATION
 plot(t,sol);
 xlabel("Days");
 ylabel("LOX emission [nmol m^{-2} s^{-1}]", 'Interpreter', 'tex');
@@ -137,7 +138,6 @@ fontsize(16,"points");
 legend('Emission interpolation', 'Experimental points', ...
     'Emission fitted to differential eq.');
 
-
-
+%PLOT ERROR PROFILE OF FITTED DIFF. EQ.
 figure;
 plot(starting_positions,error_profile);
