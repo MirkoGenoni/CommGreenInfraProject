@@ -70,6 +70,7 @@ data_emission = readtable("Data/Transmitter/sanitized_emission_data.csv", ...
 % EMISSION INTERPOLATION
 t=0:5;
 emission=data_emission.larvae_2;
+maximum=max(data_emission.larvae_2);
 
 dt= 0.001;
 t_em_intrp=0:dt:5;
@@ -79,8 +80,9 @@ emission_intrp = interp1(t, emission,t_em_intrp,'linear');
 % EXTRACT STRESSOR FROM CURRENT EMISSION
 leaf_cons = zeros(1,length(t_em_intrp));
 for index= 1:length(t_em_intrp)
-    temp = find(round(stressor,4)==round(emission_intrp(index),4));
-    leaf_cons(1,index) = t_stressor(round((max(temp) + min(temp))/2)-1);
+    leaf_cons(index) = interp1(stressor, t_stressor, ...
+                           emission_intrp(index), ...
+                           'linear', 'extrap');
 end
 
 % FITTING POLYNOMIAL TO STRESS PROFILE
@@ -119,24 +121,26 @@ hold on;
 scatter(t,emission);
 
 % LEAST SQUARE ON DIFFERENTIAL EQUATION
-starting_positions= 10.^(-6:-1); %Order of magnitude
-%starting_positions=linspace(10^-6,10^-1,1000);
+starting_positions= 10.^(-3:1); %Order of magnitude
 [best_param, error_profile] = ODE_fit(starting_positions,p, ...
-    t_em_intrp,emission_intrp);
+    t_em_intrp,emission_intrp,maximum);
 
 % SOLVE DIFFERENTIAL EQUATION WITH OPTIMAL PARAMETERS
 tsolv=[0 5];
 ic = emission_intrp(1);
-[t,sol] = ode45(@(t,g) ODE_eq(t,g,best_param(1),best_param(2), ...
-    best_param(3), p),tsolv,ic);
+for index=1:size(best_param,1)
+    [t,sol] = ode45(@(t,g) ODE_eq(t,g,best_param(index,1),best_param(index,2), ...
+        best_param(index,3), p,maximum),tsolv,ic);
+    % PLOT FITTED SOLUTION TO DIFFERENTIAL EQUATION
+    plot(t,sol);
+    xlabel("Days");
+    ylabel("LOX emission [nmol m^{-2} s^{-1}]", 'Interpreter', 'tex');
+    fontsize(16,"points");
+end
+labels = [{'Emission interpolation', 'Experimental points'}, ...
+          compose('%g', starting_positions)];
 
-% PLOT FITTED SOLUTION TO DIFFERENTIAL EQUATION
-plot(t,sol);
-xlabel("Days");
-ylabel("LOX emission [nmol m^{-2} s^{-1}]", 'Interpreter', 'tex');
-fontsize(16,"points");
-legend('Emission interpolation', 'Experimental points', ...
-    'Emission fitted to differential eq.');
+legend(labels)
 
 %PLOT ERROR PROFILE OF FITTED DIFF. EQ.
 figure;
