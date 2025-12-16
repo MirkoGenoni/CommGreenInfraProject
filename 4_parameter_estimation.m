@@ -130,7 +130,7 @@ tsolv=[0 5];
 ic = emission_intrp(1);
 for index=1:size(best_param,1)
     [t,sol] = ode45(@(t,g) ODE_eq(t,g,best_param(index,1),best_param(index,2), ...
-        best_param(index,3), p,maximum),tsolv,ic);
+        best_param(index,3), p,best_param(index,4)),tsolv,ic);
     % PLOT FITTED SOLUTION TO DIFFERENTIAL EQUATION
     plot(t,sol);
     xlabel("Days");
@@ -146,7 +146,7 @@ legend(labels)
 figure;
 plot(starting_positions,error_profile);
 
-%%
+%%---- FUNCTIONS -----
 function dgdt = ODE_eq(t,g,w,c,k_d,p,maximum)
     s = polyval(p,t);
     dgdt = maximum./(1+exp(-w*s + c))-k_d*g;
@@ -167,13 +167,13 @@ function [best_param,error_profile]=ODE_fit(starting_positions, p, t_plot,expect
     options = optimoptions(@lsqnonlin, ...
     'Algorithm','levenberg-marquardt');
     error_profile = zeros(1,length(starting_positions));
-    best_param = zeros(length(starting_positions),3);
+    best_param = zeros(length(starting_positions),4);
     for l=1:length(starting_positions)
-        x0=repmat(starting_positions(l),1,3);
+        x0=repmat(starting_positions(l),1,4);
 
         [param_fit,resnorm] = lsqnonlin( ...
             @(params) ODE_solve(params(1),params(2),params(3), ...
-                p,t_plot,expected_emission,maximum), ...
+                p,t_plot,expected_emission,params(4)), ...
             x0, [0,0,0],[10,25,10],options);
         best_param(l,:) = param_fit;
         error_profile(l) = resnorm;
