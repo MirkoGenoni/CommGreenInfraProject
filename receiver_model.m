@@ -555,7 +555,7 @@ for i = 1:length(x_distances)
     % Not considring the noise here
     C_L_noise = C_L;
 
-    semilogy(theta_deg, C_L_noise, 'LineWidth',2, 'DisplayName', sprintf('Distance = %.2f m', x_r_fixed));
+    semilogy(theta_deg, C_L_noise(1:end-1), 'LineWidth',2, 'DisplayName', sprintf('Distance = %.2f m', x_r_fixed));
 end
 
 grid on; box on;
