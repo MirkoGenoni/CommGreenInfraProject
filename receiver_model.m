@@ -202,8 +202,8 @@ title('Distance-Mass analysis (fig. 5c)');
 %% Wind speed analysis (fig. 6a)
 % Tx setup
 figure; hold on; grid on;
-for u_x = [1 25 50 100]
-    x_rx = 0:0.01:10.5;
+for u_x = [25]
+    x_rx = 0:0.01:2;
     m_tau_e = 1.1*10^-9;
     % Ch and Rx setup
     C_L0 = 0;
@@ -231,7 +231,8 @@ for u_x = [1 25 50 100]
          (2.*K_lw.*M_l.*sqrt(k).*u_x);
     f2 = (K_lw.*M_l.*u_x.*x + 2000.*A_l.*P_l.*k)./ ...
          (2.*K_lw.*M_l.*sqrt(k).*u_x);
-    sigma = erf(f1) + erf(f2);
+
+    sigma = erf_approx(f1,200) + erf_approx(f2,200);
     
     C_L = 0.9.*exp(-alpha.*tau_r).* ...
           (C_L0 + ((beta.*lambda.*delta.*sqrt(pi.*k))./u_x).*sigma);
@@ -248,7 +249,7 @@ for u_x = [1 25 50 100]
     C_L_normalized = C_L_noise./max(C_L_noise);
 
     % Graph 
-    plot(x,C_L_normalized,'LineWidth', 2)
+    plot(x,C_L,'LineWidth', 2)
     end
     ylabel('Normalized concentration');
     xlabel('Distance [m]');
