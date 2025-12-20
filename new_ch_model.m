@@ -1,80 +1,83 @@
-%% Constant system parameters
-clc, clear, close all;
-M_l = 0.5*10^-3;    %leaf mass [kg] (artemisia tridentata subsp. wyomingensis)
-A_l = 25*10^-4;     %leaf area [m^2](artemisia tridentata subsp. wyomingensis)
-P_l = 10^-8;        %permeability [m/s]
-K_lw = 1;           %partition coeff. between leaf and water
-K_aw = 10;          %partition coeff. between air and water
-x_tx = 0;           %tx x-position [m]
-y_tx = 0;           %tx y-position [m]
-z_tx = 1;           %tx z-position [m]
-x_rx = 0.001;       %rx x-position [m]
-y_rx = 0;           %rx y-position [m]
-z_rx = 1;           %rx z-position [m]
+function new_ch_model()
+    %% Constant system parameters
+    clc, clear, close all;
+    Q = 0.8;              % emitted VOC mass
+    x_tx = 0;           % tx x-position [m]
+    y_tx = 0;           % tx y-position [m]
+    z_tx = 1;           % tx z-position [m]
+    x_rx = 0.01:0.01:5; % rx x-position [m]
+    y_rx = 0;           % rx y-position [m]
+    z_rx = 1;           % rx z-position [m]
+    h = z_tx;          
+    t_init = 1;      
 
-%% Distance analysis (fig. 5a) !!!NOT READY!!!
-% Tx setup
-m_tau_e = 1.1*10^-9;
-x_rx = 0:0.01:2;
+    %% Setup Figure and UI
+    fig = figure('Name', 'Interactive Gaussian Puff', ...
+                 'Units', 'normalized', ...
+                 'Position', [0.2 0.2 0.6 0.6], ...
+                 'Color', [1 1 1]); % White background
+             
+    ax = axes('Parent', fig, 'Position', [0.1 0.3 0.8 0.6]);
+    grid on; hold on;
 
-% Ch and Rx setup
-C_L0 = 0;
+    % Initialize plot lines with zeros
+    pA = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class A');
+    pB = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class B');
+    pC = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class C');
+    pD = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class D');
+    pE = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class E');
+    pF = plot(ax, x_rx, zeros(size(x_rx)), 'LineWidth', 2, 'DisplayName', 'Class F');
 
-u_x = 25;             % wind speed x-direction [m/s]
-u_y = 0;              % wind speed y-direction [m/s]
-u_z = 0;              % wind speed z-direction [m/s]
-D   = 0.1;            % diffusion coeff. [m^2/s]
+    xlabel('Distance x\_rx [m]');
+    ylabel('Concentration');
+    legend('Location', 'best');
+    title_handle = title(sprintf('Gaussian Puff Distribution at t = %.2f s', t_init));
+    ylim([0 1]); 
 
-x = x_rx;
-z = z_rx;
-y = y_rx;
-h = z_tx;
+    %% Add Slider 
+    sld = uicontrol('Parent', fig, 'Style', 'slider', ...
+        'Min', 0.1, 'Max', 5, 'Value', t_init, ...
+        'Units', 'normalized', 'Position', [0.3 0.1 0.4 0.05], ...
+        'Callback', @(src, event) updateSlider(src, pA, pB, pC, pD, pE, pF, title_handle, x_rx, y_rx, z_rx, Q, h));
 
-%Channel anisotropy (y- and z-direction) 
-k = (1./u_x).*D.*x_rx;          
+    uicontrol('Parent', fig, 'Style', 'text', 'Units', 'normalized', ...
+        'Position', [0.3 0.16 0.4 0.03], ...
+        'String', 'Move slider to change Time (t)', ...
+        'BackgroundColor', [1 1 1]);
 
-%%%
-tau_diffusion = x_rx.^2./D;       % time delay in diffusion regime
-tau_advection = x_rx./u_x;        % time delay in advection regime
-tau = (1./tau_diffusion + 1./tau_advection).^(-1);
-tau_r = tau_advection;
-
-gamma = (m_tau_e./8).*(1./(pi.*k).^(3./2));
-lambda = exp(-(y.^2)./(4.*k)) .* ...
-         (exp(-((z-h).^2)./(4.*k)) + exp(-((z+h).^2)./(4.*k)));
-alpha = (1000.*P_l.*A_l)./(K_lw.*M_l);
-beta = (alpha.*gamma.*K_lw)./(1000.*K_aw);
-delta = exp((alpha./(K_lw.*M_l.*u_x.^2)).* ...
-            (K_lw.*M_l.*u_x.*x+1000.*A_l.*P_l.*k));
-f1 = ((K_lw.*M_l.*u_x.*(u_x.*tau_r-x))-2000.*A_l.*P_l.*k)./ ...
-     (2.*K_lw.*M_l.*sqrt(k).*u_x);
-f2 = (K_lw.*M_l.*u_x.*x + 2000.*A_l.*P_l.*k)./ ...
-     (2.*K_lw.*M_l.*sqrt(k).*u_x);
-sigma = erf(f1) + erf(f2);
-
-C_L = 0.9.*exp(-alpha.*tau_r).* ...
-      (C_L0 + ((beta.*lambda.*delta.*sqrt(pi.*k))./u_x).*sigma);
-
-mu_noise = -0.1.*C_L;
-sigma_noise = abs(mu_noise)./3;
-
-noise = 0;
-MontCal = 3000;
-
-for ml = 1:MontCal
-    noise = noise + (mu_noise + sigma_noise.*randn(size(C_L)));
+    updateSlider(sld, pA, pB, pC, pD, pE, pF, title_handle, x_rx, y_rx, z_rx, Q, h);
 end
 
-noise = noise./MontCal;
-
-C_L_noise = C_L + noise;
-C_L_normalized = C_L_noise./max(C_L_noise);
-
-% Graph
-figure; hold on; grid on;
-plot(x,C_L_normalized,'LineWidth', 2)
-plot(x,0*C_L_normalized+0.55,'LineWidth', 2, 'LineStyle','--')
-xlabel('x\_rx');
-ylabel('Normalized concentration');
-legend('Normalized C_LN', '0.55*MaxC_LN', 'Location', 'best');
-title('Distance analysis (fig. 5a)');
+%% Slider Callback Function
+function updateSlider(src, pA, pB, pC, pD, pE, pF, t_title, x_rx, y_rx, z_rx, Q, h)
+    t = get(src, 'Value'); % Current slider value
+    
+    % Recalculate stability classes for the current x_rx
+    classA = struct('u',1,'sigma_y',0.22.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.2.*x_rx);
+    classB = struct('u',1,'sigma_y',0.16.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.12.*x_rx);
+    classC = struct('u',1,'sigma_y',0.11.*x_rx./(sqrt(1+0.0001.*x_rx)), ...
+        'sigma_z',0.08.*x_rx./((1+0.0002.*x_rx)));
+    classD = struct('u',1,'sigma_y',0.08.*x_rx./(sqrt(1+0.0001.*x_rx)), ...
+        'sigma_z',0.06.*x_rx./((1+0.0015.*x_rx)));
+    classE = struct('u',1,'sigma_y',0.06.*x_rx./(sqrt(1+0.0001.*x_rx)), ...
+        'sigma_z',0.03.*x_rx./((1+0.003.*x_rx)));
+    classF = struct('u',1,'sigma_y',0.04.*x_rx./(sqrt(1+0.0001.*x_rx)), ...
+        'sigma_z',0.016.*x_rx./((1+0.003.*x_rx)));
+    
+    % Calculate new concentrations
+    C_air_A = anisotropic_gaussian_puff(Q, classA, t, x_rx, y_rx, z_rx, h);
+    C_air_B = anisotropic_gaussian_puff(Q, classB, t, x_rx, y_rx, z_rx, h);
+    C_air_C = anisotropic_gaussian_puff(Q, classC, t, x_rx, y_rx, z_rx, h);
+    C_air_D = anisotropic_gaussian_puff(Q, classD, t, x_rx, y_rx, z_rx, h);
+    C_air_E = anisotropic_gaussian_puff(Q, classE, t, x_rx, y_rx, z_rx, h);
+    C_air_F = anisotropic_gaussian_puff(Q, classF, t, x_rx, y_rx, z_rx, h);
+    
+    % Update plot data
+    set(pA, 'YData', C_air_A);
+    set(pB, 'YData', C_air_B);
+    set(pC, 'YData', C_air_C);
+    set(pD, 'YData', C_air_D);
+    set(pE, 'YData', C_air_E);
+    set(pF, 'YData', C_air_F);
+    set(t_title, 'String', sprintf('Gaussian Puff Distribution at t = %.2f s', t));
+end

@@ -1,0 +1,38 @@
+%% Constant system parameters
+clc, clear, close all;
+Q = 0.5;            %emitted VOC mass
+x_tx = 0;           %tx x-position [m]
+y_tx = 0;           %tx y-position [m]
+z_tx = 1;           %tx z-position [m]
+x_rx = 0.01:0.01:5;     %rx x-position [m]
+y_rx = 0;           %rx y-position [m]
+z_rx = 1;           %rx z-position [m]
+tau = 0.2;
+h = z_rx;
+
+%% Stability classes
+classA = struct('u',1,'sigma_y',0.22.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.2.*x_rx);
+classB = struct('u',1,'sigma_y',0.16.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.12.*x_rx);
+classF = struct('u',1,'sigma_y',0.04.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',...
+    0.016.*x_rx./((1+0.003.*x_rx)));
+
+
+
+%% Distance analysis
+C_air_A = anisotropic_gaussian_puff(Q,classA,tau,x_rx, y_rx,z_rx,h);
+C_air_B = anisotropic_gaussian_puff(Q,classB,tau,x_rx, y_rx,z_rx,h);
+C_air_F = anisotropic_gaussian_puff(Q,classF,tau,x_rx, y_rx,z_rx,h);
+
+
+
+% Graph
+figure; hold on; grid on;
+plot(x_rx,C_air_A,'LineWidth', 2)
+plot(x_rx,C_air_B,'LineWidth', 2)
+plot(x_rx,C_air_F,'LineWidth', 2)
+
+
+xlabel('x\_rx');
+ylabel('Normalized concentration');
+legend('A','B','F' ,'Location', 'best');
+title('Distance analysis');
