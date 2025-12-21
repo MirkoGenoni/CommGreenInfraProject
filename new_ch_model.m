@@ -5,7 +5,7 @@ function new_ch_model()
     x_tx = 0;           % tx x-position [m]
     y_tx = 0;           % tx y-position [m]
     z_tx = 1;           % tx z-position [m]
-    x_rx = 0.01:0.01:100; % rx x-position [m]
+    x_rx = 0.01:0.01:50; % rx x-position [m]
     y_rx = [0 -0.5 0.5 0.25 -0.25];    % rx y-position [m] (MISO)
     z_rx = 1;           % rx z-position [m]
     h = z_tx;          
