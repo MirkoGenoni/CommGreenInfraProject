@@ -1,12 +1,12 @@
 function new_ch_model()
     %% Constant system parameters
     clc, clear, close all;
-    Q = 0.8;              % emitted VOC mass
+    Q = 0.5;              % emitted VOC mass
     x_tx = 0;           % tx x-position [m]
     y_tx = 0;           % tx y-position [m]
     z_tx = 1;           % tx z-position [m]
     x_rx = 0.01:0.01:50; % rx x-position [m]
-    y_rx = [0 -0.5 0.5 0.25 -0.25];    % rx y-position [m] (MISO)
+    y_rx = [0 -0.5 0.5 1 -1];    % rx y-position [m] (MISO)
     z_rx = 1;           % rx z-position [m]
     h = z_tx;          
     t_init = 1;      
