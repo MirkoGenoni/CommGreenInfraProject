@@ -7,6 +7,9 @@ show = "best";
 show_results = 6;
 dt= 1;
 polynomial_grade = 1:2;
+starting_positions= [linspace(10^-3,10^-2,10), ...
+    linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
+    linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
 
 % DATA SANIFICATION
 file = fopen("Data/Transmitter/emission.csv", "r");
@@ -44,17 +47,15 @@ leaf_cons = zeros(1,length(t_em_intrp));
 leaf_cons(1:end-1) = larve_num;
 leaf_cons(end) = 0;
 
-% FITTING POLYNOMIAL TO STRESS PROFILE
-r_2_leaf_area = zeros(1, length(polynomial_grade));
-original_var_stress = sum((leaf_cons - mean(leaf_cons)).^2);
-
 for k=1:length(polynomial_grade)
+    % FITTING POLYNOMIAL TO STRESS PROFILE
+    r_2_leaf_area = zeros(1, length(polynomial_grade));
+    original_var_stress = sum((leaf_cons - mean(leaf_cons)).^2);
     p = polyfit(t_em_intrp, leaf_cons, polynomial_grade(k));
     leaf_fit = polyval(p, t_em_intrp);
     residuals = leaf_cons - leaf_fit;
     resnorm_sq = sum(residuals.^2);
     r_2_leaf_area(k) = 1-(resnorm_sq/original_var_stress);
-
 
     %PLOT STRESSOR PROFILE
     figure;
@@ -72,9 +73,6 @@ for k=1:length(polynomial_grade)
     scatter(t,emission);
     
     % LEAST SQUARE ON DIFFERENTIAL EQUATION
-    starting_positions= [linspace(10^-3,10^-2,10), ...
-        linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
-        linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
     [fit_param, error_profile] = ODE_fit(starting_positions,p, ...
         t_em_intrp,emission_intrp,maximum, original_var_emission);
     
