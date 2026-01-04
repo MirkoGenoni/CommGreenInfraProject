@@ -2,6 +2,7 @@
 close all; close all hidden; clc; clear;
 
 % --------- EMISSION FITTING ----------------------------------------------
+file_name = "LOX_emission.csv";
 larve_num = 4;
 show = "best";
 show_results = 6;
@@ -12,8 +13,8 @@ starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
 
 % DATA SANIFICATION
-file = fopen("Data/Transmitter/emission.csv", "r");
-sanizited_data = fopen("Data/Transmitter/sanitized_emission_data.csv", ...
+file = fopen(strcat("Data/Transmitter/", file_name), "r");
+sanizited_data = fopen(strcat("Data/Transmitter/sanitized_",file_name), ...
     "w");
 while ~feof(file)
     line = fgetl(file);
@@ -25,7 +26,7 @@ end
 fclose(file);
 fclose(sanizited_data);
 
-data_emission = readtable("Data/Transmitter/sanitized_emission_data.csv", ...
+data_emission = readtable(strcat("Data/Transmitter/sanitized_",file_name), ...
     'PreserveVariableNames',true);
 
 emission_profiles = [data_emission.larvae_2,data_emission.larvae_4, ...
@@ -96,7 +97,10 @@ for k=1:length(polynomial_grade)
         'w', 'c', 'k_d', 'r_2'};
     fig = uifigure(Name=strcat("POLY DEGREE: ", ...
         num2str(polynomial_grade(k))));
-    uit = uitable(fig,"Data",fit_param_table);
+    set(fig,'unit','normalized')
+    set(fig,'position',[0.1 0.1 0.5 0.5])
+    uit = uitable(fig,"Data",fit_param_table, "Units", "normalized", ...
+        "Position", [0 0 1 1]);
 
     % SOLVE DIFFERENTIAL EQUATION WITH OPTIMAL PARAMETERS
     tsolv=[0 5];
