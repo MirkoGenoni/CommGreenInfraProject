@@ -2,7 +2,11 @@
 close all; close all hidden; clc; clear;
 
 % --------- EMISSION FITTING ----------------------------------------------
-larve_num = 2;
+larve_num = 4;
+show = "best";
+show_results = 6;
+dt= 1;
+polynomial_grade = 1:2;
 
 % DATA SANIFICATION
 file = fopen("Data/Transmitter/emission.csv", "r");
@@ -30,7 +34,6 @@ index=log2(larve_num);
 emission=emission_profiles(:,index);
 maximum=max(emission_profiles(:, index));
 
-dt= 1;
 t_em_intrp=0:dt:5;
 
 emission_intrp = interp1(t, emission,t_em_intrp,'linear');
@@ -42,7 +45,6 @@ leaf_cons(1:end-1) = larve_num;
 leaf_cons(end) = 0;
 
 % FITTING POLYNOMIAL TO STRESS PROFILE
-polynomial_grade = 1:3;
 r_2_leaf_area = zeros(1, length(polynomial_grade));
 original_var_stress = sum((leaf_cons - mean(leaf_cons)).^2);
 
@@ -60,9 +62,10 @@ for k=1:length(polynomial_grade)
     hold on;
     plot(t_em_intrp, leaf_fit);
     xlabel("Days");
-    ylabel("Leaf area eaten [cm^2]", 'Interpreter', 'tex');
+    ylabel("Number of larvae");
     fontsize(16,"points");
     
+    %PLOT EXPERIMENTAL EMISSION POINTS
     figure;
     plot(t_em_intrp,emission_intrp);
     hold on;
@@ -71,15 +74,28 @@ for k=1:length(polynomial_grade)
     % LEAST SQUARE ON DIFFERENTIAL EQUATION
     starting_positions= [linspace(10^-3,10^-2,10), ...
         linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
-        linspace(2,10,9)]; %Order of magnitude
+        linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
     [fit_param, error_profile] = ODE_fit(starting_positions,p, ...
         t_em_intrp,emission_intrp,maximum, original_var_emission);
     
-    %PRINT TABLE WITH PARAMETERS AND STARTING CONDITIONS
-    fit_param_table = [starting_positions', fit_param];
+    %EXTRACT ONLY PARAMETERS WITH THE BEST r^2
+    if show == "best"
+        maximum_r_2 = maxk(error_profile,show_results);
+        indexes_best_values = zeros(show_results,1);
+        for j=1:length(maximum_r_2)
+            indexes_best_values(j) = find(error_profile==maximum_r_2(j));
+        end
+        indexes_best_values = sort(indexes_best_values,1,"ascend");
+        fit_param = fit_param(indexes_best_values,:);
+        error_profile = error_profile(indexes_best_values);
+        starting_positions=starting_positions(indexes_best_values);
+    end
+
+    %PRINT TABLE WITH PARAMETERS, STARTING CONDITIONS AND r^2
+    fit_param_table = [starting_positions', fit_param, error_profile'];
     fit_param_table = array2table(fit_param_table);
-    fit_param_table.Properties.VariableNames(1:4) = {'Initial postion', ...
-        'w', 'c', 'k_d'};
+    fit_param_table.Properties.VariableNames(1:5) = {'Initial postion', ...
+        'w', 'c', 'k_d', 'r_2'};
     fig = uifigure(Name=strcat("POLY DEGREE: ", ...
         num2str(polynomial_grade(k))));
     uit = uitable(fig,"Data",fit_param_table);
@@ -103,7 +119,10 @@ for k=1:length(polynomial_grade)
     
     %PLOT ERROR PROFILE OF FITTED DIFF. EQ.
     figure;
-    plot(starting_positions,error_profile);
+    scatter(starting_positions,error_profile);
+    xlabel("Starting positions");
+    ylabel('r^2', 'Interpreter','tex');
+    fontsize(16,"points");
 end
 %%
 function dgdt = ODE_eq(t,g,w,c,k_d,p,maximum)
