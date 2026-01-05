@@ -12,6 +12,15 @@ starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
 
+% INTEGRATION PROPERTIES
+tau = 1e-4; %in seconds
+window_size = 1; %in seconds
+start_time = 0; %in seconds
+
+shape = "cylindrical";
+volume = 3; %liters
+height = 25; %cm - height of a shoot
+
 % DATA SANIFICATION
 file = fopen(strcat("Data/Transmitter/", file_name), "r");
 sanizited_data = fopen(strcat("Data/Transmitter/sanitized_",file_name), ...
@@ -48,6 +57,10 @@ leaf_cons = zeros(1,length(t_em_intrp));
 leaf_cons(1:end-1) = larve_num;
 leaf_cons(end) = 0;
 
+best_param = zeros(1,3);
+best_r_2 = 0;
+best_poly_degree = 0;
+
 for k=1:length(polynomial_grade)
     % FITTING POLYNOMIAL TO STRESS PROFILE
     r_2_leaf_area = zeros(1, length(polynomial_grade));
@@ -77,6 +90,12 @@ for k=1:length(polynomial_grade)
     [fit_param, error_profile] = ODE_fit(starting_positions,p, ...
         t_em_intrp,emission_intrp,maximum, original_var_emission);
     
+    if(max(error_profile)>best_r_2)
+        best_param = fit_param(find(error_profile==max(error_profile)),:);
+        best_r_2 = max(error_profile);
+        best_poly_degree = p;
+    end
+
     %EXTRACT ONLY PARAMETERS WITH THE BEST r^2
     if show == "best"
         maximum_r_2 = maxk(error_profile,show_results);
@@ -126,6 +145,43 @@ for k=1:length(polynomial_grade)
     ylabel('r^2', 'Interpreter','tex');
     fontsize(16,"points");
 end
+
+[t_solve, sol] = ode45(@(t,g) ODE_eq(t,g,best_param(1),best_param(2), ...
+    best_param(3), best_poly_degree,maximum),tsolv,ic);
+
+volume_m_3 = volume * 1e-3;
+radius = (volume_m_3/(pi*height*1e-2))^(1/2);
+
+if shape == "cylindrical"
+    area = 2*pi*radius^2+2*pi*radius*height*10^-2;
+end
+
+time_factor = 24*60*60; %conversion from days to seconds
+t_output = 0:1/time_factor:5; %time axis in seconds for interpolation
+output = interp1(t_solve,sol,t_output)*area;
+
+window = start_time:start_time+window_size; %output window
+output_data = output(window+1);
+
+indexes = 1:(start_time+window_size)/tau;
+window_interpolation = start_time:tau:start_time+window_size;
+output = interp1(window,output_data,window_interpolation);
+integral = ((output(indexes+1)+output(indexes))*tau)/2;
+
+figure;
+plot(window_interpolation,output);
+title("Best solution");
+xlabel("Seconds");
+ylabel("LOX emission [nmol s^{-1}]", 'Interpreter', 'tex');
+fontsize(16,"points");
+
+figure;
+plot(indexes, integral);
+title("Integral");
+xlabel("tau");
+ylabel("LOX emission [nmol]", 'Interpreter', 'tex');
+fontsize(16,"points");
+
 %%
 function dgdt = ODE_eq(t,g,w,c,k_d,p,maximum)
     s = polyval(p,t);
