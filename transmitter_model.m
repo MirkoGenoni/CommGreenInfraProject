@@ -12,7 +12,7 @@ starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
 
-% INTEGRATION PROPERTIES
+
 tau = 1e-4; %in seconds
 window_size = 1; %in seconds
 start_time = 0; %in seconds
