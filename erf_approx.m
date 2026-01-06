@@ -7,5 +7,5 @@ function y = erf_approx(x, N)
         y = y+term;
     end
 
-    y = (2/sqrt(pi))*y
+    y = (2/sqrt(pi))*y;
 end
