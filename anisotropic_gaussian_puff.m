@@ -33,9 +33,9 @@ function [C_air, C_air_far_field] = anisotropic_gaussian_puff(Q,class,t,x_rx,y_r
             %     C_new = 0;
             % end
 
-            if (C_air_sigma<eps)
-                C_air_sigma = 0;
-            end
+            % if (C_air_sigma<eps)
+            %     C_air_sigma = 0;
+            % end
             
             C_air = C_air + C_air_sigma;
             % C_air_far_field = C_air_far_field + C_new;
