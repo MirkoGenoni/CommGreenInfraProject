@@ -1,4 +1,4 @@
-clc, clear, close all;
+%clc, clear, close all;
 %% Constant system parameters
 % emitted VOC mass
        
@@ -6,19 +6,20 @@ x_tx = 0;           % tx x-position [m]
 y_tx = 0;           % tx y-position [m]
 z_tx = 1;           % tx z-position [m]
 %x_rx = 0.01:0.01:1; % rx x-position [m]
-x_rx = [0.5,1];
+x_rx = [0.5 1];
 y_rx = [0];    % rx y-position [m] (MISO)
 z_rx = 1;           % rx z-position [m]
 h = z_tx;          
  
-delta_p = 0.001; %
-t_f = 10;
+delta_p = 0.01; %
+t_f = 86400*5;
 t = delta_p:delta_p:t_f;
 eps = 0;
 
 %Q = 1*ones(1,1000000)*delta_p;  
-Q = ((3 - 0.5)*rand(1, 100000))*delta_p;
+%Q = ((3 - 0.5)*rand(1, 100000))*delta_p;
 %Q = linspace(1, 0, 1000000)*delta_p;
+Q = integral; % run transmitter_model before
 
 %% BRIGGS stability classes
     classA = struct('u',1,'sigma_y',0.22.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.2.*x_rx);
@@ -37,7 +38,7 @@ Q = ((3 - 0.5)*rand(1, 100000))*delta_p;
 
 i = 1;
 C_air_vector = 0;
-t_arr = delta_p:10*delta_p:2;
+t_arr = delta_p:100000*delta_p:t_f;
 
 for t = t_arr %do a vector to calculate the concentration of all points at every time
 
@@ -52,7 +53,8 @@ for t = t_arr %do a vector to calculate the concentration of all points at every
     
     C_air_vector(i) = C_air_D(end);
     i = i+1;
-
+    
+    t/t_f %completition percentage
 end
 
 
@@ -75,5 +77,5 @@ title('Air Concentration as function of x')
 figure
 plot(t_arr,C_air_vector,'LineWidth', 1.5);
 xlabel('t [s]')
-ylabel('C_{air} [kg/m^3]')
+ylabel('C_{air} [nm/m^3]')
 title('Air Concentration as function of t (x = 1, u = 1)')

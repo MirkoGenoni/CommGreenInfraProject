@@ -1,4 +1,4 @@
-clc, clear, close all;
+%clc, clear, close all;
 %% Constant system parameters
 % emitted VOC mass
        
@@ -15,9 +15,10 @@ t_f = 5;
 t = delta_p:delta_p:t_f;
 eps = 0;
 
-Q = 1*ones(1,1000000)*delta_p;  
+%Q = 1*ones(1,1000000)*delta_p;  %constant Q
 %Q = ((3 - 0.5)*rand(1, 100000))*delta_p;
 %Q = linspace(1, 0, 1000000)*delta_p;
+Q = integral; % run transmitter_model before
 
 %% BRIGGS stability classes
     classA = struct('u',1,'sigma_y',0.22.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.2.*x_rx);
@@ -43,10 +44,10 @@ for t = t_f %do a vector to calculate the concentration of all points at every t
     M = t/delta_p;
 
     %[C_air_A, C_air_A_far_field] = anisotropic_gaussian_puff(Q, classA, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
-    % [C_air_B, C_air_B_far_field] = anisotropic_gaussian_puff(Q, classB, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
-    % [C_air_C, C_air_C_far_field] = anisotropic_gaussian_puff(Q, classC, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
-    [C_air_D, C_air_D_far_field] = anisotropic_gaussian_puff(Q, classD, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
-    % [C_air_E, C_air_E_far_field] = anisotropic_gaussian_puff(Q, classE, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
+    %[C_air_B, C_air_B_far_field] = anisotropic_gaussian_puff(Q, classB, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
+    %[C_air_C, C_air_C_far_field] = anisotropic_gaussian_puff(Q, classC, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
+     [C_air_D, C_air_D_far_field] = anisotropic_gaussian_puff(Q, classD, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
+    %[C_air_E, C_air_E_far_field] = anisotropic_gaussian_puff(Q, classE, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
     %[C_air_F, C_air_F_far_field] = anisotropic_gaussian_puff(Q, classF, t, x_rx, y_rx, z_rx, h,M,delta_p,eps);
     
     % C_air_vector(i) = C_air_D(end);
