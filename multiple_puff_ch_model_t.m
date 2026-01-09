@@ -13,7 +13,6 @@ h = z_tx;
  
 delta_p = 0.001; %
 t_f = 2;
-t = delta_p:delta_p:t_f;
 eps = 0;
 
 %Q = [integral, zeros(1,length(integral)/5)]; % run transmitter_model before
