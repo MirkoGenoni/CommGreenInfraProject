@@ -11,15 +11,13 @@ y_rx = [0];    % rx y-position [m] (MISO)
 z_rx = 1;           % rx z-position [m]
 h = z_tx;          
  
-delta_p = 0.01; %
-t_f = 86400*5.1;
+delta_p = 0.001; %
+t_f = 2;
 t = delta_p:delta_p:t_f;
-eps = 0.001;
+eps = 0;
 
-%Q = 1*ones(1,1000000)*delta_p;  
-%Q = ((3 - 0.5)*rand(1, 100000))*delta_p;
-%Q = linspace(1, 0, 1000000)*delta_p;
-Q = [integral, zeros(1,length(integral)/5)]; % run transmitter_model before
+%Q = [integral, zeros(1,length(integral)/5)]; % run transmitter_model before
+Q = integral;
 
 %% BRIGGS stability classes
     classA = struct('u',1,'sigma_y',0.22.*x_rx./(sqrt(1+0.0001.*x_rx)), 'sigma_z',0.2.*x_rx);
@@ -38,7 +36,7 @@ Q = [integral, zeros(1,length(integral)/5)]; % run transmitter_model before
 
 i = 1;
 
-t_arr = delta_p:100000*delta_p:t_f;
+t_arr = delta_p:delta_p:t_f;
 
 C_air_vector_01 = 0.*t_arr;
 C_air_vector_02 = 0.*t_arr;
