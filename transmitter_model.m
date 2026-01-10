@@ -2,12 +2,19 @@
 close all; close all hidden; clc; clear;
 
 % --------- EMISSION FITTING ----------------------------------------------
-file_name = "LOX_emission.csv";
-larve_num = 4;
+file_name = "LOX_emission_drought.csv";
+
+%Drought+Herbivore or Watered+Herbivore
+condition = "Watered+Herbivore"; 
+
 show = "best";
-show_results = 6;
+show_results = 1;
 dt= 1;
-polynomial_grade = 1:2;
+
+% BEST GRADE FOR:
+% LOX - Drought+Herbivore --> 5
+% LOX - Watered+Herbivore --> 2
+polynomial_grade = 2:2;
 starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
@@ -38,16 +45,24 @@ fclose(sanizited_data);
 data_emission = readtable(strcat("Data/Transmitter/sanitized_",file_name), ...
     'PreserveVariableNames',true);
 
-emission_profiles = [data_emission.larvae_2,data_emission.larvae_4, ...
-    data_emission.larvae_8];
+emission_profiles = [data_emission.Control,data_emission.Drought, ...
+    data_emission.("Drought+herbivore"),data_emission.("Watered+herbivore")];
 
 % EMISSION INTERPOLATION
-t=0:5;
-index=log2(larve_num);
-emission=emission_profiles(:,index);
-maximum=max(emission_profiles(:, index));
+t=-1:8;
 
-t_em_intrp=0:dt:5;
+if condition == "Drought+Herbivore"
+    larve_num = 11;
+    profile_num = 3;
+elseif condition == "Watered+Herbivore"
+    larve_num = 18;
+    profile_num = 4;
+end
+
+emission=emission_profiles(:,profile_num);
+maximum=max(emission_profiles(:, profile_num));
+
+t_em_intrp=-1:dt:8;
 
 emission_intrp = interp1(t, emission,t_em_intrp,'linear');
 original_var_emission = sum((emission_intrp-mean(emission_intrp)).^2);
@@ -122,7 +137,7 @@ for k=1:length(polynomial_grade)
         "Position", [0 0 1 1]);
 
     % SOLVE DIFFERENTIAL EQUATION WITH OPTIMAL PARAMETERS
-    tsolv=[0 5];
+    tsolv=[-1 8];
     ic = emission_intrp(1);
     for index=1:size(fit_param,1)
         [t_solver,sol] = ode45(@(t,g) ODE_eq(t,g,fit_param(index,1), ...
@@ -189,7 +204,7 @@ function dgdt = ODE_eq(t,g,w,c,k_d,p,maximum)
 end
 
 function out = ODE_solve(w,c,k_d, p, t_plot,expected_emission,maximum)
-    tsolv=[0 5];
+    tsolv=[-1 8];
     ic = expected_emission(1);
     sol = ode45(@(t,g) ODE_eq(t,g,w,c,k_d,p,maximum), ...
         tsolv,ic);
