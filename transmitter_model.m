@@ -2,10 +2,11 @@
 close all; close all hidden; clc; clear;
 
 % --------- EMISSION FITTING ----------------------------------------------
+%MON_emission_drought.csv or LOX_emission_drought.csv
 file_name = "LOX_emission_drought.csv";
 
 %Drought+Herbivore or Watered+Herbivore
-condition = "Watered+Herbivore"; 
+condition = "Drought+Herbivore";
 
 show = "best";
 show_results = 1;
@@ -14,7 +15,10 @@ dt= 1;
 % BEST GRADE FOR:
 % LOX - Drought+Herbivore --> 5
 % LOX - Watered+Herbivore --> 2
-polynomial_grade = 2:2;
+% MON - Drought+Herbivore --> 2
+% MON - Watered+Herbivore --> 2
+
+polynomial_grade = 5:5;
 starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2*10^-2,10^-1,9), linspace(2*10^-1,1,9), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
