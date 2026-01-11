@@ -203,7 +203,7 @@ fontsize(16,"points");
 
 %Base level calculation
 base_level = emission_profiles(1,:);
-average_base_level = mean(base_level)*area
+average_base_level = mean(base_level)*area*tau %what I want 
 %%
 function dgdt = ODE_eq(t,g,w,c,k_d,p,maximum)
     s = polyval(p,t);
