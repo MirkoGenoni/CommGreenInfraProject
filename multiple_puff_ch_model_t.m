@@ -14,7 +14,7 @@ h = z_tx;
 delta_p = 0.001; %
 t_f = 2;
 
-eps = 0.;
+eps = average_base_level/100;
 
 %Q = [integral, zeros(1,length(integral)/5)]; % run transmitter_model before
 Q = integral;
