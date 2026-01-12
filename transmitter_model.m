@@ -24,8 +24,8 @@ starting_positions= [linspace(10^-3,10^-2,10), ...
     linspace(2,10,9)]; %STARTING VALUES FOR THE PARAMETERS
 
 
-tau = 1e-3; %in seconds
-window_size = 20; %in seconds
+tau = 1e-4; %in seconds
+window_size = 10; %in seconds
 start_time = 0; %in seconds
 
 shape = "cylindrical";
