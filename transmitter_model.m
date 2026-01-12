@@ -25,7 +25,7 @@ starting_positions= [linspace(10^-3,10^-2,10), ...
 
 
 tau = 1e-3; %in seconds
-window_size = 2; %in seconds
+window_size = 20; %in seconds
 start_time = 0; %in seconds
 
 shape = "cylindrical";
