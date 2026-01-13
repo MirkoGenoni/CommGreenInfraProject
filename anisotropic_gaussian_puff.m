@@ -11,10 +11,10 @@ function [C_air, C_air_far_field] = anisotropic_gaussian_puff(Q,class,t,x_rx,y_r
     count = 0;
     max_count = length(y_rx);
 
-    for i = 1:length(y_rx) %h more than 1 element it's a MISO channel
+    for i = 1:max_count %h more than 1 element it's a MISO channel
         % Concentration in air
         
-        parfor j = 1:1:round(M) %togli il far field
+        parfor j = 1:1:round(M) 
             t = j*delta_p;
 
             A = Q(round(M)+1-j)./(8.*(pi.*u.*sqrt(r_y.*r_z)).^(3/2));
@@ -23,10 +23,10 @@ function [C_air, C_air_far_field] = anisotropic_gaussian_puff(Q,class,t,x_rx,y_r
             D = exp(-((z_rx-h).^2)./(4.*r_z))+exp(-((z_rx+h).^2)./(4.*r_z));
             C_new = A.*B.*C.*D;
             
-            A_sigma = Q(round(M)+1-j)./((class.sigma_y.*class.sigma_y.*class.sigma_z).*(2*pi).^(3/2));
-            B_sigma = exp(-((x_rx-u.*t).^2)./(2*class.sigma_y.^2));
-            C_sigma = exp(-(y_rx(i).^2)./(2*class.sigma_y.^2));
-            D_sigma = exp(-((z_rx-h).^2)./(2*class.sigma_z.^2))+exp(-((z_rx+h).^2)./(2*class.sigma_z.^2));
+            A_sigma = Q(round(M)+1-j)./((class.sigma_y.*class.sigma_y.*class.sigma_z).*((2*pi).^(3/2)));
+            B_sigma = exp(-((x_rx-u.*t).^2)./(2.*class.sigma_y.^2));
+            C_sigma = exp(-(y_rx(i).^2)./(2.*class.sigma_y.^2));
+            D_sigma = exp(-((z_rx-h).^2)./(2.*class.sigma_z.^2))+exp(-((z_rx+h).^2)./(2*class.sigma_z.^2));
             C_air_sigma = A_sigma.*B_sigma.*C_sigma.*D_sigma;
 
             % if (C_new<eps)
