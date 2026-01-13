@@ -73,8 +73,7 @@ original_var_emission = sum((emission_intrp-mean(emission_intrp)).^2);
 
 % STRESSOR AS NUMBER OF LARVAE
 leaf_cons = zeros(1,length(t_em_intrp));
-leaf_cons(1:end-1) = larve_num;
-leaf_cons(end) = 0;
+leaf_cons(2:end-1) = larve_num;
 
 best_param = zeros(1,3);
 best_r_2 = 0;
